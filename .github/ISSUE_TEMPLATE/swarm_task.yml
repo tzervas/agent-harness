@@ -1,0 +1,50 @@
+name: Swarm task
+description: Exclusive-file implementation issue for Build-lane agents
+title: "[swarm] "
+labels: ["swarm-ready"]
+body:
+  - type: textarea
+    id: parent
+    attributes:
+      label: Parent
+      description: Epic number
+      value: "Epic: #"
+    validations:
+      required: true
+  - type: textarea
+    id: story
+    attributes:
+      label: User story
+      value: "As a … I want … so that …"
+    validations:
+      required: true
+  - type: textarea
+    id: ac
+    attributes:
+      label: Acceptance criteria
+      value: |
+        - [ ]
+    validations:
+      required: true
+  - type: textarea
+    id: write
+    attributes:
+      label: Write ownership (exclusive)
+      value: |
+        - path/
+    validations:
+      required: true
+  - type: textarea
+    id: out
+    attributes:
+      label: Out of scope
+    validations:
+      required: true
+  - type: textarea
+    id: tests
+    attributes:
+      label: Tests
+      value: |
+        ```bash
+        # offline commands
+        ```

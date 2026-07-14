@@ -1,0 +1,19 @@
+name: ci
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  docs:
+    runs-on: ${{ vars.USE_SELF_HOSTED == 'true' && fromJSON('["self-hosted","linux","x64","podman"]') || 'ubuntu-latest' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: required docs present
+        run: |
+          test -f README.md
+          test -f LICENSE
+          test -f docs/VISION.md
+          test -f docs/WORKFLOW.md
+          test -f docs/ARCHITECTURE.md
