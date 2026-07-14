@@ -15,7 +15,7 @@ The relay stays the Telegram/provider/MCP runtime; this repo composes:
 | `tzervas/tg-agent-relay` | Telegram bridge, providers, MCP facade (consume, don’t fork product) |
 | `tzervas/agent-mcp` | Multi-agent orchestration MCP (evaluate / integrate) |
 | `tzervas/*` tooling | Prefer existing monorepos over rewrites |
-| Average Joe’s Labs (AJL) | **Read / evaluate only** — fork to `tzervas` if useful; never push as write base |
+| Average Joe’s Labs (AJL) | **Evaluate → fork to `tzervas` → extend → PR upstream** (member access; never push AJL as write base). See [docs/AJL.md](docs/AJL.md). |
 
 ## Status
 
