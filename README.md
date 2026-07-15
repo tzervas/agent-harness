@@ -19,8 +19,20 @@ The relay stays the Telegram/provider/MCP runtime; this repo composes:
 
 ## Status
 
-**Scaffold.** Design and board live in `docs/`. Implementation lands as
-`swarm-ready` issues with exclusive file ownership (same process as the relay).
+**Scaffold (v0.0.1-dev).** Docs, board epics, and a thin offline CLI live here.
+Implementation proceeds as `swarm-ready` issues with exclusive file ownership.
+
+## Quick start (CLI)
+
+```bash
+uv sync
+uv run agent-harness version
+uv run agent-harness spawn --issue 3 --dry-run
+uv run agent-harness doctor
+bash scripts/local-ci.sh
+```
+
+Zero runtime dependencies (stdlib `argparse` only). Dry-run spawn never hits the network.
 
 ## Branch model
 
@@ -29,6 +41,9 @@ The relay stays the Telegram/provider/MCP runtime; this repo composes:
 | `main` | Stable; **PR only** |
 | `dev` | Persistent integration |
 | `feat/*` | Off `dev` |
+
+Issue close policy: merges to **`dev` leave issues open**; close on **`main`** only.
+See [docs/WORKFLOW.md](docs/WORKFLOW.md).
 
 ## Self-hosted CI
 
@@ -40,12 +55,17 @@ runs-on: [self-hosted, linux, x64, podman]
 
 Register the host with an **org** runner when possible so many repos share it.
 See [gha-runner-ctl](https://github.com/tzervas/gha-runner-ctl).
+Do **not** enable `USE_SELF_HOSTED` without maintainer approval.
 
 ## Docs
 
 - [docs/VISION.md](docs/VISION.md) — goals and non-goals  
-- [docs/WORKFLOW.md](docs/WORKFLOW.md) — orchestrator + swarms, cost lanes  
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — layers and joins  
+- [docs/WORKFLOW.md](docs/WORKFLOW.md) — orchestrator + swarms, cost lanes, spawn template  
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — layers, package map, compose-by-reference  
+- [docs/AJL.md](docs/AJL.md) — AJL evaluate → fork → PR path  
+- [docs/DECISIONS.md](docs/DECISIONS.md) — design decisions (D1–D5)  
+- [docs/EPICS.md](docs/EPICS.md) — Wave C epic board links  
+- [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md) — relay + agent-mcp by reference  
 
 ## License
 
