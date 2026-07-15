@@ -5,11 +5,15 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   docs:
     runs-on: ${{ vars.USE_SELF_HOSTED == 'true' && fromJSON('["self-hosted","linux","x64","podman"]') || 'ubuntu-latest' }}
     steps:
-      - uses: actions/checkout@v4
+      # actions/checkout@v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - name: required docs present
         run: |
           test -f README.md
@@ -17,3 +21,27 @@ jobs:
           test -f docs/VISION.md
           test -f docs/WORKFLOW.md
           test -f docs/ARCHITECTURE.md
+          test -f docs/AJL.md
+          test -f docs/DECISIONS.md
+          test -f docs/EPICS.md
+          test -f docs/INTEGRATIONS.md
+          test -f VERSION
+          grep -q '0.0.1-dev' VERSION
+
+  python:
+    runs-on: ${{ vars.USE_SELF_HOSTED == 'true' && fromJSON('["self-hosted","linux","x64","podman"]') || 'ubuntu-latest' }}
+    steps:
+      # actions/checkout@v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: install uv
+        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+      - name: add uv to PATH
+        run: echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: sync, lint, test, CLI
+        run: |
+          uv python install 3.14
+          uv sync
+          uv run ruff check .
+          uv run pytest
+          uv run agent-harness version
+          uv run agent-harness spawn --issue 3 --dry-run

@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# Offline local CI mirror for agent-harness (no network spawn).
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT"
+
+echo "==> required docs"
+for f in \
+  README.md \
+  LICENSE \
+  docs/VISION.md \
+  docs/WORKFLOW.md \
+  docs/ARCHITECTURE.md \
+  docs/AJL.md \
+  docs/DECISIONS.md \
+  docs/EPICS.md \
+  docs/INTEGRATIONS.md
+do
+  test -f "$f" || { echo "missing: $f" >&2; exit 1; }
+done
+
+echo "==> VERSION"
+test -f VERSION
+grep -q '0.0.1-dev' VERSION
+
+echo "==> uv sync"
+if ! command -v uv >/dev/null 2>&1; then
+  echo "uv not found on PATH" >&2
+  exit 1
+fi
+uv sync
+
+echo "==> ruff"
+uv run ruff check .
+
+echo "==> pytest"
+uv run pytest
+
+echo "==> CLI smoke"
+uv run agent-harness version
+uv run agent-harness spawn --issue 3 --dry-run
+uv run agent-harness doctor || true
+
+echo "==> local-ci OK"
