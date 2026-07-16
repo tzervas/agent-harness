@@ -25,6 +25,9 @@ jobs:
           test -f docs/DECISIONS.md
           test -f docs/EPICS.md
           test -f docs/INTEGRATIONS.md
+          test -f docs/inventory/AJL_INVENTORY.md
+          test -f docs/inventory/ajl_shortlist.json
+          test -f .cz.toml
           test -f VERSION
           grep -q '0.0.1-dev' VERSION
 

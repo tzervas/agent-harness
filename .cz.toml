@@ -1,0 +1,19 @@
+# Commitizen configuration (commitizen-tools).
+# Optional install: pip install commitizen  OR  uv tool install commitizen
+# Valid without the CLI: agents and humans follow docs/WORKFLOW.md for the same rules.
+# Canonical peer reference: gha-runner-ctl/.cz.toml
+# Methodology: ~/documents/agent-dev-methodology.md §7 (when present).
+
+[tool.commitizen]
+name = "cz_conventional_commits"
+version = "0.0.1-dev"
+tag_format = "v$version"
+version_scheme = "semver"
+major_version_zero = true
+
+version_files = [
+    "VERSION",
+    "pyproject.toml:version",
+]
+
+update_changelog_on_bump = false
