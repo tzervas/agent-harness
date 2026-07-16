@@ -19,8 +19,22 @@ The relay stays the Telegram/provider/MCP runtime; this repo composes:
 
 ## Status
 
-**Scaffold (v0.0.1-dev).** Docs, board epics, and a thin offline CLI live here.
-Implementation proceeds as `swarm-ready` issues with exclusive file ownership.
+**Scaffold (v0.0.1-dev).** Thin offline CLI (`version` / `spawn --dry-run` / `doctor`)
+and docs pack are implemented on `main`/`dev`.
+
+**Board honesty (Wave C):** Epics [#1](https://github.com/tzervas/agent-harness/issues/1)–[#5](https://github.com/tzervas/agent-harness/issues/5)
+remain **OPEN**. Merges to `dev` do not close them; close only via ship / promote to
+`main` ([docs/WORKFLOW.md](docs/WORKFLOW.md)).
+
+| Epic | Code / docs progress | Board |
+|---|---|---|
+| #1 AJL inventory | Stub + empty shortlist documented (`docs/inventory/`) | OPEN |
+| #2 AJL forks | Not started (human gate) | OPEN |
+| #3 Thin CLI / package | v0 scaffold landed | OPEN until formal ship close |
+| #4 Relay + agent-mcp by ref | Integration notes only | OPEN |
+| #5 E2E swarm dry-run | Dry-run spawn path only; full E2E later | OPEN |
+
+Implementation continues as `swarm-ready` issues with exclusive file ownership.
 
 ## Quick start (CLI)
 
@@ -64,7 +78,8 @@ Do **not** enable `USE_SELF_HOSTED` without maintainer approval.
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — layers, package map, compose-by-reference  
 - [docs/AJL.md](docs/AJL.md) — AJL evaluate → fork → PR path  
 - [docs/DECISIONS.md](docs/DECISIONS.md) — design decisions (D1–D5)  
-- [docs/EPICS.md](docs/EPICS.md) — Wave C epic board links  
+- [docs/EPICS.md](docs/EPICS.md) — Wave C epic board links (status honesty)  
+- [docs/inventory/AJL_INVENTORY.md](docs/inventory/AJL_INVENTORY.md) — Epic 1 shortlist stub  
 - [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md) — relay + agent-mcp by reference  
 
 ## License

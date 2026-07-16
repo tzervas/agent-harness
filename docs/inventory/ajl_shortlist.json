@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "epic": 1,
+  "title": "AJL inventory and fitness shortlist",
+  "status": "empty_shortlist",
+  "updated": "2026-07-16",
+  "rationale": "Epic 1 first slice: checklist and scoring rubric live in docs/AJL.md. No AJL candidates have been scored yet; empty shortlist is acceptable until a read-only evaluation pass populates candidates. No fork without human approval (Epic 2 gate).",
+  "human_gate": "Do not real-fork AJL repos without maintainer approval. Never push to AJL as write base.",
+  "checklist_doc": "docs/AJL.md",
+  "candidates": []
+}

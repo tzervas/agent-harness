@@ -65,11 +65,17 @@ Score each candidate **0–2** per dimension (0 = poor, 1 = partial, 2 = strong)
 Empty shortlist is **acceptable** if the inventory table documents scores and rationale
 (see Epic [#1](https://github.com/tzervas/agent-harness/issues/1)).
 
-## Inventory table (template)
+## Inventory table
+
+**Canonical inventory (Epic 1):** [inventory/AJL_INVENTORY.md](inventory/AJL_INVENTORY.md)
+and machine-readable [inventory/ajl_shortlist.json](inventory/ajl_shortlist.json).
+
+Current shortlist status: **empty** (documented rationale in the inventory doc).
+Scored candidates are filled there as evaluation proceeds — not in this overview.
 
 | Repo | Role fit | Score | Recommendation | Notes |
 |---|---|---|---|---|
-| _TBD_ | | | skip / watch / fork | Epic 1 fills this |
+| — | — | — | — | See inventory doc; empty shortlist OK |
 
 ## `gh` fork and upstream PR commands
 
