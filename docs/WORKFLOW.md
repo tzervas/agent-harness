@@ -90,6 +90,12 @@ spawn plan (dry-run)
 - Epic: ship issue with `Closes #<epic>` on **`main`**.  
 - **`dev` merges leave the board open.**
 
+## Commits and version bumps
+
+- Prefer [Conventional Commits](https://www.conventionalcommits.org/).  
+- Optional Commitizen config: [`.cz.toml`](../.cz.toml) (aligned with gha-runner-ctl style).  
+- `VERSION` / `pyproject.toml` stay at `0.0.1-dev` for this wave; do not tag a release without a ship decision.
+
 ## Self-hosted CI
 
 One host via [gha-runner-ctl](https://github.com/tzervas/gha-runner-ctl).  
