@@ -8,7 +8,7 @@ the roadmap. Status below is **honest progress**, not issue close state.
 
 | # | Epic | Labels | Depends on | Progress (not board close) |
 |---|---|---|---|---|
-| [#1](https://github.com/tzervas/agent-harness/issues/1) | AJL inventory and fitness shortlist | `epic` | — | Stub: empty shortlist + rationale in [inventory/](inventory/AJL_INVENTORY.md); scored candidates still TODO |
+| [#1](https://github.com/tzervas/agent-harness/issues/1) | AJL inventory and fitness shortlist | `epic` | — | Stub: empty shortlist + rationale in [inventory/](inventory/AJL_INVENTORY.md); offline loader + tests (`agent_harness/inventory.py`, `tests/test_inventory.py`); scored candidates still TODO |
 | [#2](https://github.com/tzervas/agent-harness/issues/2) | Fork selected AJL components under tzervas | `epic` | #1 | Not started — human gate |
 | [#3](https://github.com/tzervas/agent-harness/issues/3) | Thin CLI and package scaffold | `epic` `cli` | — | **Code landed** (v0 CLI/package/`local-ci`); epic stays OPEN until ship close on `main` |
 | [#4](https://github.com/tzervas/agent-harness/issues/4) | Integrate tg-agent-relay and agent-mcp by reference | `epic` `docs` | #3 | Docs notes only ([INTEGRATIONS.md](INTEGRATIONS.md)) |
