@@ -1,5 +1,10 @@
 # agent-harness
 
+<!-- FLEET-BADGES:BEGIN -->
+[![CI](https://github.com/tzervas/agent-harness/actions/workflows/fleet-ci.yml/badge.svg?branch=main)](https://github.com/tzervas/agent-harness/actions/workflows/fleet-ci.yml?query=branch%3Amain)
+[![Security](https://github.com/tzervas/agent-harness/actions/workflows/fleet-security.yml/badge.svg?branch=main)](https://github.com/tzervas/agent-harness/actions/workflows/fleet-security.yml?query=branch%3Amain)
+<!-- FLEET-BADGES:END -->
+
 **Universal multi-agent harness** (orchestrator + swarms) under `tzervas`.
 
 MIT · Python 3.14 preferred · optional Rust later · shared CI via
