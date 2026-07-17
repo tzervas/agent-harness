@@ -9,6 +9,9 @@ echo "==> required docs"
 for f in \
   README.md \
   LICENSE \
+  AGENTS.md \
+  CLAUDE.md \
+  CHANGELOG.md \
   docs/VISION.md \
   docs/WORKFLOW.md \
   docs/ARCHITECTURE.md \
@@ -25,7 +28,7 @@ done
 
 echo "==> VERSION"
 test -f VERSION
-grep -q '0.0.1-dev' VERSION
+grep -qx '0.1.0' VERSION
 
 echo "==> uv sync"
 if ! command -v uv >/dev/null 2>&1; then
@@ -41,8 +44,8 @@ echo "==> pytest"
 uv run pytest
 
 echo "==> CLI smoke"
-uv run agent-harness version
+uv run agent-harness version | grep -q '0.1.0'
 uv run agent-harness spawn --issue 3 --dry-run
-uv run agent-harness doctor || true
+uv run agent-harness doctor
 
 echo "==> local-ci OK"

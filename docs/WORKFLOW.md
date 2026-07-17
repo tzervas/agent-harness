@@ -94,7 +94,8 @@ spawn plan (dry-run)
 
 - Prefer [Conventional Commits](https://www.conventionalcommits.org/).  
 - Optional Commitizen config: [`.cz.toml`](../.cz.toml) (aligned with gha-runner-ctl style).  
-- `VERSION` / `pyproject.toml` stay at `0.0.1-dev` for this wave; do not tag a release without a ship decision.
+- Keep `VERSION`, `pyproject.toml`, and `.cz.toml` in sync (currently **0.1.0** alpha).
+  Tag format `v$version`; do not tag without a ship decision and CHANGELOG entry.
 
 ## Self-hosted CI
 
