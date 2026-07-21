@@ -23,8 +23,6 @@
 | `agent_harness/__main__.py` | `python -m agent_harness` entry |
 | `agent_harness/cli.py` | argparse CLI: `version`, `spawn`, `doctor` |
 | `agent_harness/spawn.py` | Offline spawn plan builder (no network) |
-| `agent_harness/inventory.py` | Offline loader for Epic 1 AJL shortlist JSON |
-| `docs/inventory/` | AJL inventory stub (markdown + `ajl_shortlist.json`) |
 | `tests/` | Offline unit tests |
 
 **Runtime dependencies:** none (Python stdlib only). Dev tools: `ruff`, `pytest` via uv.

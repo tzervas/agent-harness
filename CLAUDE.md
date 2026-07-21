@@ -15,8 +15,7 @@ formal ship close on `main`.
 agent_harness/     # Package (stdlib only)
   cli.py           # argparse: version / spawn / doctor
   spawn.py         # Offline spawn plan builder
-  inventory.py     # AJL shortlist JSON loader
-tests/             # Offline pytest
+  tests/             # Offline pytest
 scripts/
   local-ci.sh      # Preferred local gate
 docs/              # Vision, workflow, architecture, integrations

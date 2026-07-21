@@ -27,22 +27,9 @@ touching phone runtime.
 | Alternative | Why not |
 |---|---|
 | Monorepo under relay | Forces relay version bumps for harness-only work |
-| Push directly to AJL | Membership ≠ write base; always fork → PR upstream |
-| Reimplement AJL capabilities in-tree | Prefer fork/extend when AJL already solves it |
 
-**Where.** This repository; [docs/AJL.md](AJL.md); relay docs point outward for harness work.
+**Where.** This repository; relay docs point outward for harness work.
 
-## D2 — Prefer extending AJL via fork + upstream PR
-
-**Context.** Useful harness/orchestration building blocks may already exist in AJL
-orgs the maintainer belongs to.
-
-**Decision.** Default path is evaluate AJL → fork under `tzervas` → develop →
-PR back to AJL. `agent-harness` orchestrates; it does not replace every dependency.
-
-**Why.** Less rewrite, better OSS hygiene, keeps personal product namespaces clean.
-
-**Where.** [docs/AJL.md](AJL.md), Epic [#1](https://github.com/tzervas/agent-harness/issues/1) / [#2](https://github.com/tzervas/agent-harness/issues/2).
 
 ## D3 — Python thin package (`agent_harness`) with uv + hatchling
 

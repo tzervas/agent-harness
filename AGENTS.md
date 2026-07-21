@@ -5,7 +5,7 @@ House rules for AI coding assistants (and multi-agent L0/L1 waves) working in th
 ## Product
 
 **agent-harness** is a thin offline multi-agent orchestrator CLI: spawn dry-run plans,
-doctor environment checks, and AJL inventory stubs. It composes sibling products
+doctor environment checks, and multi-agent orchestration stubs. It composes sibling products
 ([tg-agent-relay](https://github.com/tzervas/tg-agent-relay),
 [agent-mcp](https://github.com/tzervas/agent-mcp),
 [cabal-devmelopner](https://github.com/tzervas/cabal-devmelopner),
