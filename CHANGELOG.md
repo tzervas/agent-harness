@@ -5,11 +5,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [0.2.0] — 2026-07-21
 
 ### Removed
 - Average Joe's Labs (AJL) exploratory inventory docs, shortlist JSON, and offline loader.
   That work was only for not re-doing team research in another org; not product surface.
+
+### Changed
+- **docs/INTEGRATIONS.md** — added a compose-pointer honesty note to the
+  `cabal-devmelopner` section: cabal is pre-1.0 with no released interface, and
+  "cabal may drive harness dry-runs" is a doc-only forward reference, not a
+  shipped or contract-tested adapter.
+- **Version** — `0.1.0` → **`0.2.0`** (alpha; VERSION/pyproject/.cz.toml/local-ci
+  gate kept in sync; board honesty unchanged: epics #1–#5 remain OPEN).
 
 ## [0.1.0] — 2026-07-16
 

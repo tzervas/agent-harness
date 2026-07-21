@@ -21,7 +21,7 @@ MIT · Python ≥ 3.14 · **zero runtime dependencies** · optional shared CI vi
 
 ## Status
 
-**Alpha v0.1.0** — usable offline CLI + docs pack. Not a full swarm platform yet.
+**Alpha v0.2.0** — usable offline CLI + docs pack. Not a full swarm platform yet.
 
 | Surface | Ready? |
 |---|---|
@@ -47,7 +47,7 @@ git clone https://github.com/tzervas/agent-harness.git
 cd agent-harness
 uv sync
 uv run agent-harness version
-# → 0.1.0
+# → 0.2.0
 
 uv run agent-harness spawn --issue 3 --dry-run
 # → spawn plan (dry-run)
@@ -64,7 +64,7 @@ uv run agent-harness doctor
 #      [ok] uv on PATH: …
 #      [ok] VERSION file: …
 #      [ok] scripts/local-ci.sh: …
-#      version: 0.1.0
+#      version: 0.2.0
 
 bash scripts/local-ci.sh
 # → ==> local-ci OK
