@@ -15,12 +15,9 @@ for f in \
   docs/VISION.md \
   docs/WORKFLOW.md \
   docs/ARCHITECTURE.md \
-  docs/AJL.md \
   docs/DECISIONS.md \
   docs/EPICS.md \
   docs/INTEGRATIONS.md \
-  docs/inventory/AJL_INVENTORY.md \
-  docs/inventory/ajl_shortlist.json \
   .cz.toml
 do
   test -f "$f" || { echo "missing: $f" >&2; exit 1; }

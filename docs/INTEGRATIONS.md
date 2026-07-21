@@ -13,7 +13,6 @@ or vendored binaries. Project scaffolding and fleet standards come from
 | [tzervas/agent-mcp](https://github.com/tzervas/agent-mcp) | Multi-agent orchestration MCP | Evaluate tools; thin adapters later; **no deep in-tree reimplementation** |
 | [tzervas/cabal-devmelopner](https://github.com/tzervas/cabal-devmelopner) | Operator CLI/TUI; L0/L1 waves | Spawn / join orchestration consumers; cabal may drive harness dry-runs |
 | [tzervas/gha-runner-ctl](https://github.com/tzervas/gha-runner-ctl) | Shared self-hosted runner control | Docs + optional `runs-on` labels; **do not re-vendor** |
-| Average Joe’s Labs | Candidate building blocks | Evaluate → fork under `tzervas` → PR upstream ([AJL.md](AJL.md)) |
 
 ## tz-forge
 
@@ -99,7 +98,6 @@ uv run agent-harness spawn --issue 3 --dry-run
 2. Any adapter code in this repo must have **exclusive write ownership** on swarm issues.
 3. Integration decisions go in [DECISIONS.md](DECISIONS.md).
 4. Architecture package map: [ARCHITECTURE.md](ARCHITECTURE.md).
-5. Human gates: no `USE_SELF_HOSTED` enablement and no AJL real-fork without approval.
 6. Scaffold new swarm products from **tz-forge**, then specialize — do not fork harness solely for templates.
 
 ## Related epics

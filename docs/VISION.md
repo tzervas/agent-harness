@@ -11,7 +11,7 @@
 ## Non-goals
 
 - Replacing Telegram runtime (`tg-agent-relay` remains the product surface for phone ↔ agent).
-- Pushing to third-party orgs (AJL) as a write base.
+- Pushing to third-party orgs as a default write base.
 - Fleet-scale runner infrastructure (one well-run host is enough).
 - Framework-heavy stacks when a thin harness will do.
 

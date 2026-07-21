@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Removed
+- Average Joe's Labs (AJL) exploratory inventory docs, shortlist JSON, and offline loader.
+  That work was only for not re-doing team research in another org; not product surface.
+
 ## [0.1.0] — 2026-07-16
 
 ### Added
@@ -36,8 +42,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Thin offline CLI (`version` / `spawn --dry-run` / `doctor`).
-- Epic 1 AJL inventory stub + offline loader tests.
-- Docs pack: VISION, WORKFLOW, ARCHITECTURE, AJL, DECISIONS, EPICS, INTEGRATIONS.
+- Epic 1 inventory stub (later removed).
+- Docs pack: VISION, WORKFLOW, ARCHITECTURE, DECISIONS, EPICS, INTEGRATIONS.
 - `scripts/local-ci.sh` offline gate (ruff + pytest + CLI smoke).
 - Fleet standards workflows and badges (P26).
 - REUSE / SPDX license bootstrap.

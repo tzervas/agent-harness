@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-__all__ = ["__version__", "read_version", "load_ajl_inventory"]
+__all__ = ["__version__", "read_version"]
 
 
 def read_version() -> str:
@@ -22,11 +22,4 @@ def read_version() -> str:
 __version__ = read_version()
 
 
-def __getattr__(name: str):
-    # Lazy export so import agent_harness stays light.
-    if name == "load_ajl_inventory":
-        from agent_harness.inventory import load_ajl_inventory
 
-        return load_ajl_inventory
-    msg = f"module {__name__!r} has no attribute {name!r}"
-    raise AttributeError(msg)

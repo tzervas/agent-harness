@@ -9,7 +9,6 @@
 
 **agent-harness** is a thin, offline-first multi-agent orchestrator for the
 `tzervas` fleet. Use it when you need a **local dry-run spawn plan**, environment
-doctor, and AJL inventory stubs — without network calls, paid APIs, or a Telegram
 runtime.
 
 It is a **separate product** from [tg-agent-relay](https://github.com/tzervas/tg-agent-relay)
@@ -34,8 +33,6 @@ MIT · Python ≥ 3.14 · **zero runtime dependencies** · optional shared CI vi
 
 | Epic | Code / docs progress | Board |
 |---|---|---|
-| #1 AJL inventory | Stub + empty shortlist documented (`docs/inventory/`) | OPEN |
-| #2 AJL forks | Not started (human gate) | OPEN |
 | #3 Thin CLI / package | v0 scaffold landed | OPEN until formal ship close |
 | #4 Relay + agent-mcp by ref | Integration notes only | OPEN |
 | #5 E2E swarm dry-run | Dry-run spawn path only; full E2E later | OPEN |
@@ -83,7 +80,6 @@ Zero runtime dependencies (stdlib `argparse` only). Dry-run spawn never hits the
 | [tzervas/tg-agent-relay](https://github.com/tzervas/tg-agent-relay) | Telegram bridge, providers, MCP facade (consume, don’t fork product) |
 | [tzervas/agent-mcp](https://github.com/tzervas/agent-mcp) | Multi-agent orchestration MCP (evaluate / integrate) |
 | [tzervas/cabal-devmelopner](https://github.com/tzervas/cabal-devmelopner) | Operator CLI/TUI for L0/L1 waves |
-| Average Joe’s Labs (AJL) | **Evaluate → fork to `tzervas` → extend → PR upstream** (member access; never push AJL as write base). See [docs/AJL.md](docs/AJL.md). |
 
 Full details: [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md).
 
@@ -118,10 +114,8 @@ Do **not** enable `USE_SELF_HOSTED` without maintainer approval.
 - [docs/VISION.md](docs/VISION.md) — goals and non-goals
 - [docs/WORKFLOW.md](docs/WORKFLOW.md) — orchestrator + swarms, cost lanes, spawn template
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — layers, package map, compose-by-reference
-- [docs/AJL.md](docs/AJL.md) — AJL evaluate → fork → PR path
 - [docs/DECISIONS.md](docs/DECISIONS.md) — design decisions (D1–D5)
 - [docs/EPICS.md](docs/EPICS.md) — Wave C epic board links (status honesty)
-- [docs/inventory/AJL_INVENTORY.md](docs/inventory/AJL_INVENTORY.md) — Epic 1 shortlist stub
 - [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md) — tz-forge + relay + agent-mcp + cabal
 - [docs/FLEET_STANDARDS.md](docs/FLEET_STANDARDS.md) — fleet CI / issue close
 
