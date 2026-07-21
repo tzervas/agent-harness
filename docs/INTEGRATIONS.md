@@ -73,6 +73,13 @@ uv run --project ../tz-forge tz-new agent-swarm /tmp/my-swarm --assistant=fracta
 
 **Boundary.** Cabal is the operator-facing agent CLI/TUI for L0/L1 waves.
 
+**Honesty note.** `cabal-devmelopner` is itself pre-1.0 and has no released,
+versioned interface yet. The "cabal may drive harness dry-runs" pointer above
+describes an intended compose direction, not a shipped or contract-tested
+integration — there is no adapter code, pinned version, or CI check in this
+repo that exercises it. Treat it as a doc-only forward reference until cabal
+cuts a stable release and an integration test lands here.
+
 **In scope for harness**
 
 - Document how cabal can invoke harness dry-run as a local gate step
