@@ -20,7 +20,7 @@ bash scripts/local-ci.sh
 ```
 
 That gate covers required docs, `uv sync`, ruff, pytest, and CLI smoke
-(`version` / `spawn --dry-run` / `doctor`).
+(`version` / `spawn --dry-run` / `doctor` / `compose-doctor`).
 
 Quick path:
 
@@ -29,6 +29,7 @@ uv sync
 uv run ruff check .
 uv run pytest -q
 uv run agent-harness version
+uv run agent-harness compose-doctor
 ```
 
 ## PR tiers — Refs vs Closes
