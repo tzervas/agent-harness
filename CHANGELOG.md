@@ -5,6 +5,20 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] — 2026-07-21
+
+### Added
+- **spawn plan v1:** roles (orchestrator/implementer/reviewer), exclusive path globs,
+  compose sibling refs, worktree hint — still offline-only dry-run.
+- **`--json`** on `spawn` for machine-readable plans (E2E dry-run surface).
+- **`--exclusive GLOB`** (repeatable) to pin leaf ownership in the plan.
+- **`compose-doctor`** advisory offline sibling discovery (never vendors; never fails on missing).
+
+### Changed
+- Version **0.2.0 → 0.3.0** (minor: plan surface + compose doctor).
+- Epics #1/#2 remain superseded (no third-party-org fork workflow).
+- 1.0.0 may auto-tag when epics #3–#5 acceptance + CI/security bar met (see docs/EPICS.md).
+
 ## [0.2.0] — 2026-07-21
 
 ### Removed

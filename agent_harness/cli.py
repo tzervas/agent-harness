@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 from agent_harness import __version__, read_version
-from agent_harness.spawn import build_spawn_plan
+from agent_harness.spawn import SIBLING_REFS, build_spawn_plan
 
 
 def _cmd_version(_: argparse.Namespace) -> int:
@@ -19,16 +19,44 @@ def _cmd_version(_: argparse.Namespace) -> int:
 
 def _cmd_spawn(args: argparse.Namespace) -> int:
     dry_run = bool(args.dry_run)
+    exclusive: tuple[str, ...] | None = None
+    if args.exclusive:
+        exclusive = tuple(p.strip() for p in args.exclusive if p.strip())
     try:
-        plan = build_spawn_plan(args.issue, dry_run=dry_run, lane=args.lane)
+        plan = build_spawn_plan(
+            args.issue,
+            dry_run=dry_run,
+            lane=args.lane,
+            exclusive_paths=exclusive,
+        )
     except ValueError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
     except NotImplementedError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
-    print(plan.render())
+    if args.json:
+        print(plan.to_json())
+    else:
+        print(plan.render())
     return 0
+
+
+def _sibling_roots() -> list[Path]:
+    """Candidate parent dirs for compose-by-reference siblings (offline)."""
+    cwd = Path.cwd().resolve()
+    roots = [cwd.parent, cwd]
+    env = __import__("os").environ.get("AGENT_HARNESS_SIBLING_ROOT")
+    if env:
+        roots.insert(0, Path(env).expanduser().resolve())
+    # de-dupe preserving order
+    seen: set[Path] = set()
+    out: list[Path] = []
+    for r in roots:
+        if r not in seen:
+            seen.add(r)
+            out.append(r)
+    return out
 
 
 def _cmd_doctor(_: argparse.Namespace) -> int:
@@ -77,6 +105,31 @@ def _cmd_doctor(_: argparse.Namespace) -> int:
     return 1 if failed else 0
 
 
+def _cmd_compose_doctor(_: argparse.Namespace) -> int:
+    """Offline compose-by-reference checks (siblings optional; never fail on missing)."""
+    print("compose-doctor (offline, advisory)")
+    roots = _sibling_roots()
+    print(f"  search roots: {', '.join(str(r) for r in roots)}")
+    found = 0
+    for name, url in sorted(SIBLING_REFS.items()):
+        path_hit: Path | None = None
+        for root in roots:
+            candidate = root / name
+            if candidate.is_dir() and (
+                (candidate / ".git").exists() or (candidate / "README.md").is_file()
+            ):
+                path_hit = candidate
+                break
+        if path_hit is not None:
+            found += 1
+            print(f"  [ok] {name}: {path_hit}  ({url})")
+        else:
+            print(f"  [--] {name}: not in sibling roots  ({url})")
+    print(f"  siblings present: {found}/{len(SIBLING_REFS)} (advisory; compose by ref)")
+    print("  note: missing siblings are OK — harness never vendors them")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="agent-harness",
@@ -100,7 +153,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_spawn.add_argument(
         "--dry-run",
         action="store_true",
-        help="Offline plan only (required in v0; no network)",
+        help="Offline plan only (required in v0.x; no network)",
     )
     p_spawn.add_argument(
         "--lane",
@@ -108,10 +161,28 @@ def build_parser() -> argparse.ArgumentParser:
         choices=("build", "flagship", "fast"),
         help="Cost lane (default: build)",
     )
+    p_spawn.add_argument(
+        "--exclusive",
+        action="append",
+        default=[],
+        metavar="GLOB",
+        help="Exclusive path glob for this leaf (repeatable); default template if omitted",
+    )
+    p_spawn.add_argument(
+        "--json",
+        action="store_true",
+        help="Emit plan as JSON (machine-readable dry-run)",
+    )
     p_spawn.set_defaults(func=_cmd_spawn)
 
     p_doctor = sub.add_parser("doctor", help="Offline environment checks")
     p_doctor.set_defaults(func=_cmd_doctor)
+
+    p_compose = sub.add_parser(
+        "compose-doctor",
+        help="Advisory offline checks for compose-by-reference siblings",
+    )
+    p_compose.set_defaults(func=_cmd_compose_doctor)
 
     return parser
 

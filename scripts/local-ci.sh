@@ -25,7 +25,7 @@ done
 
 echo "==> VERSION"
 test -f VERSION
-grep -qx '0.2.0' VERSION
+grep -qx '0.3.0' VERSION
 
 echo "==> uv sync"
 if ! command -v uv >/dev/null 2>&1; then
@@ -41,7 +41,7 @@ echo "==> pytest"
 uv run pytest
 
 echo "==> CLI smoke"
-uv run agent-harness version | grep -q '0.2.0'
+uv run agent-harness version | grep -q '0.3.0'
 uv run agent-harness spawn --issue 3 --dry-run
 uv run agent-harness doctor
 

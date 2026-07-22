@@ -3,6 +3,8 @@
 <!-- FLEET-BADGES:BEGIN -->
 [![CI](https://github.com/tzervas/agent-harness/actions/workflows/fleet-ci.yml/badge.svg?branch=main)](https://github.com/tzervas/agent-harness/actions/workflows/fleet-ci.yml?query=branch%3Amain)
 [![Security](https://github.com/tzervas/agent-harness/actions/workflows/fleet-security.yml/badge.svg?branch=main)](https://github.com/tzervas/agent-harness/actions/workflows/fleet-security.yml?query=branch%3Amain)
+[![Runner](https://img.shields.io/badge/runs--on-self--hosted%20podman-informational)](https://github.com/tzervas/gha-runner-ctl)
+[![Version](https://img.shields.io/badge/version-0.3.0-blue)](CHANGELOG.md)
 <!-- FLEET-BADGES:END -->
 
 ## Product
@@ -21,7 +23,7 @@ MIT · Python ≥ 3.14 · **zero runtime dependencies** · optional shared CI vi
 
 ## Status
 
-**Alpha v0.2.0** — usable offline CLI + docs pack. Not a full swarm platform yet.
+**Alpha v0.3.0** — usable offline CLI + docs pack. Not a full swarm platform yet.
 
 | Surface | Ready? |
 |---|---|
@@ -59,6 +61,8 @@ uv run agent-harness spawn --issue 3 --dry-run
 #      note:         offline; no GitHub fetch; …
 
 uv run agent-harness doctor
+uv run agent-harness compose-doctor
+uv run agent-harness spawn --issue 3 --dry-run --json | head
 # → doctor (offline)
 #      [ok] python>=3.14: …
 #      [ok] uv on PATH: …
