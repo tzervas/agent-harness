@@ -1,0 +1,15 @@
+[Unit]
+Description=Tick the agent-harness autodev supervisor
+Documentation=https://github.com/tzervas/agent-harness/blob/main/docs/AUTODEV.md
+
+[Timer]
+# Off-grid minute on purpose: :00 and :30 are where every scheduler on the planet
+# lands. Staggered against agent-coop's */17 and grok's */23 ticks.
+OnCalendar=*:07/13
+Persistent=true
+RandomizedDelaySec=90
+AccuracySec=15s
+Unit=agent-harness-loop.service
+
+[Install]
+WantedBy=timers.target

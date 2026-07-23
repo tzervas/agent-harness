@@ -5,6 +5,34 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **`loop` — the autodev supervisor** (#24): one short-lived session per leased
+  component, spawned via each provider's headless mode. Dry-run by default; `--live`
+  claims leases and spawns for real.
+- **`agent_harness/coop.py`** — adapter over the `agent-coop` CLI. agent-coop stays
+  the single lease authority and the single work queue (its ADR-0002); nothing is
+  reimplemented. Bus bodies are clamped to the measured 500-char limit rather than
+  being rejected and lost.
+- **`agent_harness/autoprompt.py`** — the instruction set handed to an ephemeral
+  session: task, coordination discipline, validation gate, handoff obligation, exit
+  contract.
+- **`agent_harness/providers.py`** — provider registry and routing on budget, lane,
+  capability and lease conflicts. An unservable lane escalates rather than silently
+  downgrading tier.
+- **`agent_harness/units.py`** — work units, per-unit state, and JSON backlog loading.
+- **`docs/AUTODEV.md`** — the design, and the four #24 open questions settled with
+  their reasoning.
+
+### Notes
+- Handoffs are **pointer, not payload**: the file holds the content, the bus message
+  holds its path.
+- The supervisor releases only leases it claimed, for sessions it watched exit.
+  Everything else waits for TTL expiry — stealing cannot tell "dead" from "slow".
+- A held lease (`coop lease claim` exit 3) is a correct back-off and does not fail
+  the run.
+
 ## [0.3.0] — 2026-07-21
 
 ### Added
