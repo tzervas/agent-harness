@@ -5,6 +5,29 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Ephemeral-session autoloop planner** (`agent_harness/loop.py`, `agent-harness loop`) —
+  plans a development task across repeated *ephemeral* sessions, each a fresh session given
+  an **autoprompt** derived from the task and the prior iteration's reported outcome.
+  Offline dry-run only, matching `spawn`: it plans an autoloop, it does not run one.
+  - **Bounded by construction** — `--max-iterations` is required, defaults to 5 and is hard
+    capped at 100. An autoloop that stops "when the model decides it is done" is an
+    unbounded spend, and a loop unable to make progress will burn the budget proving it.
+  - **Idle-aware** — `--stop-after-idle` requires N *consecutive* no-progress rounds
+    ("loop until dry") rather than quitting on the first quiet one. A value that could
+    never fire (greater than `--max-iterations`) is rejected, since a stop condition that
+    cannot trigger reads as protection while providing none.
+  - **Never-silent** — every plan enumerates its stop conditions up front.
+  - **Deterministic** — session ids hash from task+index with no clock or randomness, so a
+    plan is reproducible and testable.
+  - The resumed-iteration autoprompt explicitly tells the session it did *not* perform the
+    carried work and must verify state itself, so it cannot re-report a previous
+    iteration's success as its own.
+- `tests/test_loop.py` — 17 offline tests covering bounds, determinism, session isolation,
+  refusal of live execution, and every validation path.
+
 ## [0.3.0] — 2026-07-21
 
 ### Added

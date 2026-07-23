@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 from agent_harness import __version__, read_version
+from agent_harness.loop import build_loop_plan
 from agent_harness.spawn import SIBLING_REFS, build_spawn_plan
 
 
@@ -28,6 +29,27 @@ def _cmd_spawn(args: argparse.Namespace) -> int:
             dry_run=dry_run,
             lane=args.lane,
             exclusive_paths=exclusive,
+        )
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    except NotImplementedError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    if args.json:
+        print(plan.to_json())
+    else:
+        print(plan.render())
+    return 0
+
+
+def _cmd_loop(args: argparse.Namespace) -> int:
+    try:
+        plan = build_loop_plan(
+            args.task,
+            dry_run=bool(args.dry_run),
+            max_iterations=args.max_iterations,
+            stop_after_idle=args.stop_after_idle,
         )
     except ValueError as exc:
         print(f"error: {exc}", file=sys.stderr)
@@ -174,6 +196,35 @@ def build_parser() -> argparse.ArgumentParser:
         help="Emit plan as JSON (machine-readable dry-run)",
     )
     p_spawn.set_defaults(func=_cmd_spawn)
+
+    p_loop = sub.add_parser(
+        "loop",
+        help="Plan an ephemeral-session autoloop (use --dry-run; no network)",
+    )
+    p_loop.add_argument(
+        "--task",
+        required=True,
+        help="Task the autoloop should drive to completion",
+    )
+    p_loop.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Offline plan only (required in v0.x; starts no sessions)",
+    )
+    p_loop.add_argument(
+        "--max-iterations",
+        type=int,
+        default=5,
+        help="Hard bound on iterations (default: 5). An unbounded autoloop is an unbounded spend.",
+    )
+    p_loop.add_argument(
+        "--stop-after-idle",
+        type=int,
+        default=2,
+        help="Stop after N CONSECUTIVE no-progress iterations (default: 2)",
+    )
+    p_loop.add_argument("--json", action="store_true", help="Emit plan as JSON")
+    p_loop.set_defaults(func=_cmd_loop)
 
     p_doctor = sub.add_parser("doctor", help="Offline environment checks")
     p_doctor.set_defaults(func=_cmd_doctor)
