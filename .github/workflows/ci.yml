@@ -16,20 +16,32 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - name: required docs present
         run: |
-          test -f README.md
-          test -f LICENSE
-          test -f docs/VISION.md
-          test -f docs/WORKFLOW.md
-          test -f docs/ARCHITECTURE.md
-          test -f docs/AJL.md
-          test -f docs/DECISIONS.md
-          test -f docs/EPICS.md
-          test -f docs/INTEGRATIONS.md
-          test -f docs/inventory/AJL_INVENTORY.md
-          test -f docs/inventory/ajl_shortlist.json
-          test -f .cz.toml
-          test -f VERSION
-          grep -q '0.0.1-dev' VERSION
+          set -euo pipefail
+          # Kept in sync with the files that actually exist. Three AJL docs and a
+          # `grep -q '0.0.1-dev' VERSION` used to be asserted here; #20 purged the AJL
+          # inventory and VERSION moved to 0.3.0, but this job was never updated — so it
+          # has failed on EVERY push and PR to main since, for reasons unrelated to the
+          # change under test. A permanently-red gate is as useless as a permanently-green
+          # one: both teach reviewers to stop reading it.
+          #
+          # VERSION is checked for shape, not a literal, so a release bump cannot re-break
+          # this the way pinning 0.0.1-dev did.
+          for f in \
+            README.md \
+            LICENSE \
+            docs/VISION.md \
+            docs/WORKFLOW.md \
+            docs/ARCHITECTURE.md \
+            docs/DECISIONS.md \
+            docs/EPICS.md \
+            docs/INTEGRATIONS.md \
+            .cz.toml \
+            VERSION
+          do
+            test -f "$f" || { echo "missing required file: $f" >&2; exit 1; }
+          done
+          grep -qE '^[0-9]+\.[0-9]+\.[0-9]+' VERSION \
+            || { echo "VERSION is not semver-shaped: $(cat VERSION)" >&2; exit 1; }
 
   python:
     runs-on: [self-hosted, linux, x64, podman]
