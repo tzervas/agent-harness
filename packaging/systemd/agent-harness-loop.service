@@ -1,0 +1,40 @@
+[Unit]
+# Durable autodev supervisor.
+#
+# This is the honest answer to "keep the loop alive". agent-coop#17 measured that
+# nothing can wake a *stopped* interactive session — a hook can only inject into a
+# session already running. So the loop does not live in a session at all: this unit
+# is long-lived and the sessions it spawns are deliberately short-lived.
+#
+# Install:
+#   cp packaging/systemd/agent-harness-loop.* ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now agent-harness-loop.timer
+Description=agent-harness autodev supervisor (ephemeral sessions)
+Documentation=https://github.com/tzervas/agent-harness/blob/main/docs/AUTODEV.md
+After=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/work/agent-harness
+Environment=AGENT_COOP_HOME=%h/work/agent-coop/.coop
+Environment=AGENT_COOP_AGENT=harness
+Environment=AGENT_COOP_ENV=/dev/null
+Environment=PATH=%h/.local/bin:%h/.grok/bin:/usr/local/bin:/usr/bin:/bin
+
+# --live is deliberate and explicit. Without it the unit plans and does nothing.
+ExecStart=%h/.local/bin/agent-harness loop \
+    --units %h/.config/agent-harness/backlog.json \
+    --handoff-dir %h/work/agent-coop/.coop/handoff \
+    --live \
+    --max-iterations 1 \
+    --failure-budget 3 \
+    --session-timeout 1800
+
+# A supervisor that dies must not take the work with it: leases carry a TTL and
+# the backlog is on disk, so the next tick resumes cleanly.
+TimeoutStartSec=7200
+Nice=10
+
+[Install]
+WantedBy=default.target

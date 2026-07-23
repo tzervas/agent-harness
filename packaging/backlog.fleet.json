@@ -1,0 +1,84 @@
+{
+  "_comment": [
+    "Fleet backlog for the autodev supervisor. Each unit is scoped to exactly one",
+    "leasable component so two units never contend for the same lease.",
+    "Run planned first:  agent-harness loop --units packaging/backlog.fleet.json",
+    "Then live:          ... --live --watch --interval 300"
+  ],
+  "units": [
+    {
+      "uid": "relay-notify-control",
+      "repo": "tg-agent-relay",
+      "component": "relay/harness_bridge",
+      "task": "Wire agent-harness into tg-agent-relay so the operator is notified of and can steer supervisor activity from Telegram. Requirements: (1) push a notification per unit transition (started, stage change, ok, FAILED, ESCALATED) including the handoff file path; (2) accept control commands back — pause/resume the loop, skip or requeue a unit, raise/lower the failure budget, and request the status board; (3) use Telegram forum topics (threads) so each unit or repo gets its own thread rather than one flat chat, with the bot opening a thread per unit and replying in it. INVARIANT from issue #24: the relay must NOT become a second control plane. It steers the one supervisor by writing to the supervisor's control file / bus, it never dispatches work to providers itself. Read docs/AUTODEV.md before planning.",
+      "issue": 24,
+      "lane": "flagship",
+      "validate": "bash scripts/local-ci.sh",
+      "ttl": 5400,
+      "stages": ["plan", "implement", "verify"]
+    },
+    {
+      "uid": "harness-control-file",
+      "repo": "agent-harness",
+      "component": "agent_harness/control.py",
+      "task": "Add a control surface the supervisor reads each tick: a JSON control file (and matching coop bus messages) supporting pause, resume, skip <uid>, requeue <uid>, set-failure-budget <n>, and drain. The loop must honour it between units, never mid-session, so a pause is clean rather than a kill. This is the seam tg-agent-relay steers through; keep it provider-agnostic and file-based so anything can drive it. Add offline tests with an injected clock/runner.",
+      "issue": 24,
+      "lane": "build",
+      "validate": "bash scripts/local-ci.sh",
+      "ttl": 5400,
+      "stages": ["plan", "implement", "verify"]
+    },
+    {
+      "uid": "gh-dispatch-trigger",
+      "repo": "agent-harness",
+      "component": ".github/workflows/autodev.yml",
+      "task": "Add GitHub automation that triggers the supervisor: a workflow accepting repository_dispatch and workflow_dispatch that enqueues a unit onto the backlog, plus an issue-labelled trigger (label 'autodev' enqueues that issue as a unit). The workflow must NOT spawn provider sessions in CI — it only enqueues; the durable systemd supervisor executes. Document the token scope required and fail closed if it is absent.",
+      "issue": 24,
+      "lane": "build",
+      "validate": "bash scripts/local-ci.sh",
+      "ttl": 3600,
+      "stages": ["plan", "implement", "verify"]
+    },
+    {
+      "uid": "runner-node24-fix",
+      "repo": "gha-runner-ctl",
+      "component": "src/image",
+      "task": "PR #19 (force JS actions onto the bundled node24 runtime) is CONFLICTING/DIRTY. Rebase it onto current main, resolve conflicts, and verify locally. This is a real runner defect: JS actions resolving to the wrong node runtime is part of why self-hosted jobs fail rather than merely queue. Do not merge — leave it green and ready.",
+      "lane": "build",
+      "validate": "bash scripts/check.sh",
+      "ttl": 5400,
+      "stages": ["plan", "implement", "verify"]
+    },
+    {
+      "uid": "runner-queue-drain",
+      "repo": "gha-runner-ctl",
+      "component": "src/queue",
+      "task": "PR #25 (robust queue drain for large prefer-lists) is CONFLICTING/DIRTY. Rebase onto current main, resolve, verify locally. Relevant to F2: the fleet sits at online=0 with queued work, and registration is capped at 30/hour, so drain behaviour under a large prefer-list is on the critical path. Do not merge.",
+      "lane": "build",
+      "validate": "bash scripts/check.sh",
+      "ttl": 5400,
+      "stages": ["plan", "implement", "verify"]
+    },
+    {
+      "uid": "release-automation",
+      "repo": "agent-harness",
+      "component": "scripts/release.sh",
+      "task": "Automate the release cycle: bump VERSION + pyproject + .cz.toml together (they must never drift), regenerate CHANGELOG from conventional commits via cz, tag v$VERSION, and reinstall the local instance so the running supervisor picks up the new build. STABILITY GATE, explicit operator policy: do NOT publish to any public index or registry (PyPI, crates.io) until stability is warranted — the script must require an explicit --publish flag AND a clean gate, and must default to local install plus git tag only. Document what 'stability warranted' means concretely (green gate on N consecutive releases, no open sev-1).",
+      "lane": "build",
+      "validate": "bash scripts/local-ci.sh",
+      "ttl": 5400,
+      "stages": ["plan", "implement", "verify"]
+    },
+    {
+      "uid": "fresh-window-launcher",
+      "repo": "agent-harness",
+      "component": "scripts/launch-supervisor.sh",
+      "task": "Launch the supervisor in its own fresh terminal/WSL window rather than inside an interactive agent session, so supervising does not burn the operator's session usage. Detect the environment (WSL vs plain Linux), prefer the systemd --user timer when available and fall back to a detached window otherwise, and refuse to start a second supervisor if one is already running — one supervisor, per issue #24. Print how to attach to and stop it.",
+      "issue": 24,
+      "lane": "build",
+      "validate": "bash scripts/local-ci.sh",
+      "ttl": 3600,
+      "stages": ["plan", "implement", "verify"]
+    }
+  ]
+}
