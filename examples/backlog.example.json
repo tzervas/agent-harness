@@ -1,0 +1,25 @@
+{
+  "units": [
+    {
+      "uid": "example-docs-sweep",
+      "repo": "agent-harness",
+      "component": "docs/",
+      "task": "Bring docs/WORKFLOW.md in line with the autodev loop: document the loop subcommand and the handoff pointer convention.",
+      "issue": 24,
+      "lane": "build",
+      "validate": "bash scripts/local-ci.sh",
+      "ttl": 3600
+    },
+    {
+      "uid": "example-flagship-design",
+      "repo": "agent-harness",
+      "component": "docs/ARCHITECTURE.md",
+      "task": "Draft the supervisor/provider boundary section, including why agent-coop stays a dependency rather than a component.",
+      "issue": 24,
+      "lane": "flagship",
+      "provider": "claude",
+      "validate": "bash scripts/local-ci.sh",
+      "ttl": 3600
+    }
+  ]
+}

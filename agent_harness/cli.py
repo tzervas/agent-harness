@@ -3,12 +3,18 @@
 from __future__ import annotations
 
 import argparse
+import json as _json
+import os
 import shutil
 import sys
 from pathlib import Path
 
 from agent_harness import __version__, read_version
+from agent_harness.coop import CoopClient
+from agent_harness.providers import Budget, installed
 from agent_harness.spawn import SIBLING_REFS, build_spawn_plan
+from agent_harness.supervisor import Supervisor, summarise
+from agent_harness.units import Backlog, dedupe_by_key, load_units
 
 
 def _cmd_version(_: argparse.Namespace) -> int:
@@ -130,6 +136,96 @@ def _cmd_compose_doctor(_: argparse.Namespace) -> int:
     return 0
 
 
+def _parse_budgets(pairs: list[str]) -> dict[str, Budget]:
+    """Parse repeated ``--budget name=N`` flags."""
+    budgets: dict[str, Budget] = {}
+    for pair in pairs:
+        name, sep, raw = pair.partition("=")
+        if not sep:
+            msg = f"--budget expects name=N, got {pair!r}"
+            raise ValueError(msg)
+        try:
+            budgets[name.strip()] = Budget(remaining=float(raw))
+        except ValueError as exc:
+            msg = f"--budget {pair!r}: {raw!r} is not a number"
+            raise ValueError(msg) from exc
+    return budgets
+
+
+def _cmd_loop(args: argparse.Namespace) -> int:
+    """Supervise ephemeral sessions over a backlog of units."""
+    try:
+        units = dedupe_by_key(load_units(args.units))
+    except (OSError, ValueError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    except _json.JSONDecodeError as exc:
+        print(f"error: {args.units}: invalid JSON: {exc}", file=sys.stderr)
+        return 2
+
+    if not units:
+        print("loop: backlog is empty; nothing to do")
+        return 0
+
+    try:
+        budgets = _parse_budgets(args.budget)
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+
+    coop = CoopClient(
+        agent=args.agent or os.environ.get("AGENT_COOP_AGENT") or "",
+        home=args.coop_home or os.environ.get("AGENT_COOP_HOME") or "",
+    )
+    if args.live and not coop.available():
+        print(
+            "error: --live needs the `coop` executable on PATH "
+            "(agent-coop is a hard dependency of the loop)",
+            file=sys.stderr,
+        )
+        return 2
+
+    supervisor = Supervisor(
+        coop=coop,
+        backlog=Backlog(units=list(units)),
+        handoff_dir=Path(args.handoff_dir).expanduser(),
+        budgets=budgets,
+        failure_budget=args.failure_budget,
+        session_timeout=args.session_timeout,
+        live=bool(args.live),
+        coop_home=args.coop_home or os.environ.get("AGENT_COOP_HOME", ""),
+    )
+
+    mode = "live" if args.live else "dry-run"
+    max_iterations = None if args.watch else args.max_iterations
+    print(f"autodev loop ({mode})")
+    print(f"  units:          {len(units)}")
+    print(f"  providers:      {', '.join(installed()) or 'none installed'}")
+    print(f"  failure budget: {args.failure_budget}")
+    print(f"  handoff dir:    {args.handoff_dir}")
+    print(f"  iterations:     {'watch' if max_iterations is None else max_iterations}")
+
+    passes = supervisor.run(max_iterations=max_iterations, interval=args.interval)
+
+    for index, outcomes in enumerate(passes, start=1):
+        print(f"  -- pass {index} --")
+        for outcome in outcomes:
+            print(outcome.render())
+
+    counts = summarise(passes)
+    if args.json:
+        print(_json.dumps(counts, indent=2, sort_keys=True))
+    else:
+        summary = ", ".join(f"{k}={v}" for k, v in sorted(counts.items())) or "nothing to do"
+        print(f"  summary: {summary}")
+
+    # Escalations and hard failures are the only non-zero exits: a held lease is a
+    # correct back-off, not an error.
+    if counts.get("escalated") or counts.get("no-provider"):
+        return 1
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="agent-harness",
@@ -183,6 +279,76 @@ def build_parser() -> argparse.ArgumentParser:
         help="Advisory offline checks for compose-by-reference siblings",
     )
     p_compose.set_defaults(func=_cmd_compose_doctor)
+
+    p_loop = sub.add_parser(
+        "loop",
+        help="Supervise ephemeral sessions over a backlog (dry-run unless --live)",
+        description=(
+            "Autodev supervisor: one short-lived session per leased component. "
+            "Dry-run by default — it claims no leases and spawns nothing."
+        ),
+    )
+    p_loop.add_argument(
+        "--units",
+        required=True,
+        metavar="FILE",
+        help="JSON backlog: a list of units, or {'units': [...]}",
+    )
+    p_loop.add_argument(
+        "--live",
+        action="store_true",
+        help="Actually claim leases and spawn sessions (default: plan only)",
+    )
+    p_loop.add_argument(
+        "--max-iterations",
+        type=int,
+        default=1,
+        metavar="N",
+        help="Passes over the backlog (default: 1)",
+    )
+    p_loop.add_argument(
+        "--watch",
+        action="store_true",
+        help="Loop until no unit is worth attempting (overrides --max-iterations)",
+    )
+    p_loop.add_argument(
+        "--interval",
+        type=float,
+        default=0.0,
+        metavar="SECONDS",
+        help="Sleep between passes (default: 0)",
+    )
+    p_loop.add_argument(
+        "--failure-budget",
+        type=int,
+        default=3,
+        metavar="N",
+        help="Consecutive failures per unit before escalating (default: 3)",
+    )
+    p_loop.add_argument(
+        "--session-timeout",
+        type=float,
+        default=1800.0,
+        metavar="SECONDS",
+        help="Hard timeout for one ephemeral session (default: 1800)",
+    )
+    p_loop.add_argument(
+        "--handoff-dir",
+        default=".coop/handoff",
+        metavar="DIR",
+        help="Where sessions write handoff files (default: .coop/handoff)",
+    )
+    p_loop.add_argument(
+        "--budget",
+        action="append",
+        default=[],
+        metavar="NAME=N",
+        help="Remaining budget for a provider (repeatable), e.g. claude=5",
+    )
+    p_loop.add_argument("--agent", default="", help="Override AGENT_COOP_AGENT")
+    p_loop.add_argument("--coop-home", default="", help="Override AGENT_COOP_HOME")
+    p_loop.add_argument("--json", action="store_true", help="Emit the summary as JSON")
+    p_loop.set_defaults(func=_cmd_loop)
 
     return parser
 

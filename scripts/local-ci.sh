@@ -45,4 +45,7 @@ uv run agent-harness version | grep -q '0.3.0'
 uv run agent-harness spawn --issue 3 --dry-run
 uv run agent-harness doctor
 
+# Dry-run only: claims no leases, spawns nothing, never touches the bus.
+uv run agent-harness loop --units examples/backlog.example.json
+
 echo "==> local-ci OK"
