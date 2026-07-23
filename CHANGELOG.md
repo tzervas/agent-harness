@@ -5,6 +5,22 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] — 2026-07-23
+
+### Added
+- **Autodev supervisor** (issue #24 / agent-coop#17): long-lived loop, short-lived sessions.
+- **`enqueue` / `loop` / `status`** CLI — unit-of-work queue under `$AGENT_HARNESS_HOME`.
+- **Providers:** `mock` (tests), `claude -p`, `grok --prompt-file`.
+- **Coop bridge:** drives `coop-msg` / `coop-inbox` / `coop-lease` without reimplementing the bus.
+- **Failure budget:** max attempts then bus `block` + escalated state.
+- **Pointer-first handoff** prompts for ephemeral sessions.
+- **docs/AUTODEV.md** — architecture, CLI, design choices, TUI follow-up (cabal textual).
+- **`spawn --live`** plan mode (execute via enqueue+loop).
+
+### Changed
+- Version **0.3.0 → 0.4.0**.
+- Doctor reports coop/claude/grok availability (warn-only if missing).
+
 ## [0.3.0] — 2026-07-21
 
 ### Added

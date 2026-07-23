@@ -78,29 +78,56 @@ def build_spawn_plan(
     lane: str = "build",
     exclusive_paths: tuple[str, ...] | None = None,
     roles: tuple[str, ...] | None = None,
+    live: bool = False,
+    provider: str = "mock",
 ) -> SpawnPlan:
     """Build a spawn plan.
 
-    Dry-run is the only supported path in v0.x: never performs network I/O.
-    Live spawn remains a hard error until a post-1.0 network path is designed.
+    Dry-run: offline plan only (default).
+    Live: plan for ephemeral session via ``agent-harness loop`` / providers
+    (claude -p, grok --prompt-file, or mock). Does not itself spend tokens —
+    the supervisor executes the plan.
     """
     if issue < 1:
         msg = f"issue must be a positive integer, got {issue}"
         raise ValueError(msg)
-    if not dry_run:
-        msg = "live spawn is not implemented in v0.x; use --dry-run"
+    if live and dry_run:
+        msg = "pass either --dry-run or --live, not both"
+        raise ValueError(msg)
+    if not dry_run and not live:
+        # backward compatible: bare spawn without flags still errors helpfully
+        msg = "live spawn requires --live (or use --dry-run for offline plan)"
         raise NotImplementedError(msg)
+    if dry_run:
+        return SpawnPlan(
+            issue=issue,
+            mode="dry-run",
+            network=False,
+            lane=lane,
+            validate="bash scripts/local-ci.sh",
+            note=(
+                "offline; no GitHub fetch; fill exclusive paths from issue body; "
+                "compose cabal/relay/mcp by reference only; "
+                "for ephemeral autodev use: agent-harness enqueue + loop"
+            ),
+            roles=roles or DEFAULT_ROLES,
+            exclusive_paths=exclusive_paths or DEFAULT_EXCLUSIVE_PATHS,
+            siblings=dict(SIBLING_REFS),
+        )
     return SpawnPlan(
         issue=issue,
-        mode="dry-run",
-        network=False,
+        mode=f"live/{provider}",
+        network=True,
         lane=lane,
-        validate="bash scripts/local-ci.sh",
+        validate="coop bus handoff + local-ci if code",
         note=(
-            "offline; no GitHub fetch; fill exclusive paths from issue body; "
-            "compose cabal/relay/mcp by reference only"
+            f"ephemeral {provider} session; supervisor owns loop; "
+            "unit pointer handoff; lease TTL reclaim; failure budget escalate"
         ),
         roles=roles or DEFAULT_ROLES,
         exclusive_paths=exclusive_paths or DEFAULT_EXCLUSIVE_PATHS,
-        siblings=dict(SIBLING_REFS),
+        siblings={
+            **dict(SIBLING_REFS),
+            "agent-coop": "https://github.com/tzervas/agent-coop",
+        },
     )

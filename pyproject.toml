@@ -1,6 +1,6 @@
 [project]
 name = "agent-harness"
-version = "0.3.0"
+version = "0.4.0"
 description = "Universal multi-agent harness (orchestrator + swarms) under tzervas"
 readme = "README.md"
 license = "MIT"

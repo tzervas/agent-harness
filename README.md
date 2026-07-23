@@ -23,14 +23,15 @@ MIT · Python ≥ 3.14 · **zero runtime dependencies** · optional shared CI vi
 
 ## Status
 
-**Alpha v0.3.0** — usable offline CLI + docs pack. Not a full swarm platform yet.
+**Alpha v0.4.0** — usable offline CLI + docs pack. Not a full swarm platform yet.
 
 | Surface | Ready? |
 |---|---|
 | `version` / `spawn --dry-run` / `doctor` | Yes (offline) |
 | `scripts/local-ci.sh` | Yes |
 | AGENTS.md + CLAUDE.md | Yes |
-| Live spawn / network GitHub fetch | No (v0 intentionally) |
+| Live spawn / network GitHub fetch | **Yes (v0.4)** — `enqueue` + `loop` (mock/claude/grok) |
+| Autodev supervisor | **Yes** — see [docs/AUTODEV.md](docs/AUTODEV.md) |
 | Epics [#1](https://github.com/tzervas/agent-harness/issues/1)–[#5](https://github.com/tzervas/agent-harness/issues/5) | **OPEN** (board honesty) |
 
 | Epic | Code / docs progress | Board |
@@ -72,6 +73,11 @@ uv run agent-harness spawn --issue 3 --dry-run --json | head
 
 bash scripts/local-ci.sh
 # → ==> local-ci OK
+
+# Ephemeral autodev (mock — no tokens)
+uv run agent-harness enqueue --title demo --pointer ./README.md --provider mock
+uv run agent-harness loop --once --no-lease
+uv run agent-harness status
 ```
 
 Zero runtime dependencies (stdlib `argparse` only). Dry-run spawn never hits the network.

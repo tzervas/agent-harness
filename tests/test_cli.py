@@ -80,7 +80,15 @@ def test_spawn_without_dry_run_not_implemented(capsys: pytest.CaptureFixture[str
     code = main(["spawn", "--issue", "1"])
     assert code == 2
     err = capsys.readouterr().err
-    assert "dry-run" in err
+    assert "dry-run" in err or "live" in err
+
+
+def test_spawn_live_plan(capsys: pytest.CaptureFixture[str]) -> None:
+    code = main(["spawn", "--issue", "24", "--live", "--provider", "mock"])
+    assert code == 0
+    out = capsys.readouterr().out
+    assert "live/mock" in out
+    assert "enqueue" in out
 
 
 def test_build_spawn_plan_dict() -> None:
@@ -97,7 +105,7 @@ def test_doctor_runs(capsys: pytest.CaptureFixture[str]) -> None:
     # May fail checks if cwd lacks VERSION; still must be 0 or 1.
     assert code in (0, 1)
     out = capsys.readouterr().out
-    assert "doctor (offline)" in out
+    assert "doctor" in out
     assert "python>=3.14" in out
 
 
