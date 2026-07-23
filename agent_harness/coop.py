@@ -227,6 +227,16 @@ class CoopClient:
             args += ["--refs", " ".join(refs)]
         return self._run(args).ok
 
+    def status_text(self) -> str:
+        """Raw ``coop status`` output, for human-facing boards."""
+        result = self._run(["status"])
+        return result.stdout if result.ok else f"(coop status unavailable: {result.stderr.strip()})"
+
+    def inbox_peek_text(self) -> str:
+        """Raw peeked inbox, for human-facing boards. Never drains."""
+        result = self._run(["inbox", "--peek"])
+        return result.stdout if result.ok else f"(inbox unavailable: {result.stderr.strip()})"
+
     def inbox(self, *, peek: bool = True) -> list[dict[str, Any]]:
         """Read the inbox. Peek by default — draining is destructive.
 

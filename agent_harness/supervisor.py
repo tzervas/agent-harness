@@ -265,6 +265,63 @@ class Supervisor:
             refs=[f"issue#{unit.issue}"] if unit.issue else None,
         )
 
+    # -- board ----------------------------------------------------------------
+
+    def render_board(self) -> str:
+        """Human-readable state of every unit the supervisor knows about."""
+        lines = [
+            f"supervisor board ({'live' if self.live else 'dry-run'})",
+            f"  units: {len(self.backlog)}   failure budget: {self.failure_budget}",
+            f"  handoff dir: {self.handoff_dir}",
+        ]
+        if not self.backlog.units:
+            lines.append("  (backlog empty)")
+            return "\n".join(lines)
+
+        held = set()
+        if self.live:
+            held = self.coop.held_by_others()
+
+        lines.append(
+            f"  {'uid':<24} {'lane':<9} {'attempts':>8} {'fails':>6}  state"
+        )
+        for unit in self.backlog.units:
+            st = self.backlog.state_for(unit)
+            if st.escalated:
+                state = "ESCALATED"
+            elif unit.key in held:
+                state = "held-by-other"
+            elif st.failures:
+                state = f"retrying ({st.last_error[:40]})"
+            elif st.attempts:
+                state = "done"
+            else:
+                state = "pending"
+            lines.append(
+                f"  {unit.uid:<24} {unit.lane:<9} {st.attempts:>8} {st.failures:>6}  {state}"
+            )
+        return "\n".join(lines)
+
+    def board_dict(self) -> dict[str, object]:
+        """Machine-readable board."""
+        return {
+            "live": self.live,
+            "failure_budget": self.failure_budget,
+            "handoff_dir": str(self.handoff_dir),
+            "units": [
+                {
+                    "uid": unit.uid,
+                    "key": unit.key,
+                    "lane": unit.lane,
+                    "attempts": self.backlog.state_for(unit).attempts,
+                    "failures": self.backlog.state_for(unit).failures,
+                    "escalated": self.backlog.state_for(unit).escalated,
+                    "last_error": self.backlog.state_for(unit).last_error,
+                }
+                for unit in self.backlog.units
+            ],
+        }
+
     # -- the loop -------------------------------------------------------------
 
     def run_once(self) -> list[SessionOutcome]:

@@ -435,3 +435,64 @@ def test_cli_loop_empty_backlog(tmp_path: Path, capsys: pytest.CaptureFixture[st
     code = main(["loop", "--units", str(path)])
     assert code == 0
     assert "backlog is empty" in capsys.readouterr().out
+
+
+# -- enqueue / status board ----------------------------------------------------
+
+
+def test_enqueue_appends_and_persists(tmp_path: Path) -> None:
+    path = tmp_path / "backlog.json"
+    code = main(
+        [
+            "enqueue", "--units", str(path), "--uid", "a1",
+            "--repo", "r", "--component", "c/", "--task", "do it",
+        ]
+    )
+    assert code == 0
+    assert [u.uid for u in load_units(path)] == ["a1"]
+
+
+def test_enqueue_rejects_duplicate_uid(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    path = tmp_path / "backlog.json"
+    args = [
+        "enqueue", "--units", str(path), "--uid", "a1",
+        "--repo", "r", "--component", "c/", "--task", "do it",
+    ]
+    assert main(args) == 0
+    assert main(args) == 2
+    assert "already contains" in capsys.readouterr().err
+
+
+def test_enqueue_preserves_wrapped_shape(tmp_path: Path) -> None:
+    path = tmp_path / "backlog.json"
+    path.write_text(json.dumps({"units": [make_unit().to_dict()]}), encoding="utf-8")
+    main(
+        [
+            "enqueue", "--units", str(path), "--uid", "a2",
+            "--repo", "r", "--component", "c/", "--task", "do it",
+        ]
+    )
+    reloaded = json.loads(path.read_text(encoding="utf-8"))
+    assert isinstance(reloaded, dict) and "units" in reloaded
+
+
+def test_status_board_renders(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    path = _write_backlog(tmp_path)
+    code = main(["status", "--units", str(path), "--no-coop"])
+    assert code == 0
+    out = capsys.readouterr().out
+    assert "supervisor board" in out
+    assert "u1" in out
+    assert "pending" in out
+
+
+def test_status_board_json(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    path = _write_backlog(tmp_path)
+    assert main(["status", "--units", str(path), "--json"]) == 0
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["units"][0]["uid"] == "u1"
+
+
+def test_status_board_empty_backlog(capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["status", "--no-coop"]) == 0
+    assert "backlog empty" in capsys.readouterr().out

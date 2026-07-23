@@ -139,6 +139,38 @@ def load_units(source: str | Path) -> list[WorkUnit]:
     return [unit_from_dict(item) for item in raw]
 
 
+def save_units(source: str | Path, units: Iterable[WorkUnit]) -> None:
+    """Write units back, preserving the ``{"units": [...]}`` wrapper shape."""
+    path = Path(source)
+    payload = [unit.to_dict() for unit in units]
+    wrapped = False
+    if path.is_file():
+        try:
+            existing = json.loads(path.read_text(encoding="utf-8"))
+            wrapped = isinstance(existing, dict)
+        except (json.JSONDecodeError, OSError):
+            wrapped = False
+    body: object = {"units": payload} if wrapped else payload
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(body, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def append_unit(source: str | Path, unit: WorkUnit) -> list[WorkUnit]:
+    """Append one unit to a backlog file, creating it if absent.
+
+    Rejects a duplicate uid rather than silently shadowing it — two units with one
+    uid would share per-unit state and corrupt the failure budget.
+    """
+    path = Path(source)
+    existing = load_units(path) if path.is_file() else []
+    if any(u.uid == unit.uid for u in existing):
+        msg = f"backlog already contains a unit with uid {unit.uid!r}"
+        raise ValueError(msg)
+    updated = [*existing, unit]
+    save_units(path, updated)
+    return updated
+
+
 def dedupe_by_key(units: Iterable[WorkUnit]) -> list[WorkUnit]:
     """Keep the first unit per lease key.
 

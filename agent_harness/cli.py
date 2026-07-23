@@ -13,8 +13,9 @@ from agent_harness import __version__, read_version
 from agent_harness.coop import CoopClient
 from agent_harness.providers import Budget, installed
 from agent_harness.spawn import SIBLING_REFS, build_spawn_plan
+from agent_harness.status_board import render_board
 from agent_harness.supervisor import Supervisor, summarise
-from agent_harness.units import Backlog, dedupe_by_key, load_units
+from agent_harness.units import Backlog, WorkUnit, append_unit, dedupe_by_key, load_units
 
 
 def _cmd_version(_: argparse.Namespace) -> int:
@@ -226,6 +227,58 @@ def _cmd_loop(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_enqueue(args: argparse.Namespace) -> int:
+    """Append one unit to a backlog file."""
+    try:
+        unit = WorkUnit(
+            uid=args.uid,
+            repo=args.repo,
+            component=args.component,
+            task=args.task,
+            issue=args.issue,
+            lane=args.lane,
+            provider=args.provider or None,
+            validate=args.validate,
+            ttl=args.ttl,
+        )
+    except ValueError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    try:
+        units = append_unit(args.units, unit)
+    except (OSError, ValueError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    print(f"enqueued {unit.uid} -> {args.units} ({len(units)} unit(s))")
+    return 0
+
+
+def _cmd_status(args: argparse.Namespace) -> int:
+    """Show the supervisor board plus a coop peek (never drains)."""
+    units: list[WorkUnit] = []
+    if args.units:
+        try:
+            units = dedupe_by_key(load_units(args.units))
+        except (OSError, ValueError) as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
+
+    supervisor = Supervisor(
+        coop=CoopClient(
+            agent=args.agent or os.environ.get("AGENT_COOP_AGENT") or "",
+            home=args.coop_home or os.environ.get("AGENT_COOP_HOME") or "",
+        ),
+        backlog=Backlog(units=units),
+        handoff_dir=Path(args.handoff_dir).expanduser(),
+        live=False,
+    )
+    if args.json:
+        print(_json.dumps(supervisor.board_dict(), indent=2, sort_keys=True))
+        return 0
+    print(render_board(supervisor, include_coop=not args.no_coop))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="agent-harness",
@@ -349,6 +402,28 @@ def build_parser() -> argparse.ArgumentParser:
     p_loop.add_argument("--coop-home", default="", help="Override AGENT_COOP_HOME")
     p_loop.add_argument("--json", action="store_true", help="Emit the summary as JSON")
     p_loop.set_defaults(func=_cmd_loop)
+
+    p_enq = sub.add_parser("enqueue", help="Append a unit of work to a backlog file")
+    p_enq.add_argument("--units", required=True, metavar="FILE", help="Backlog JSON file")
+    p_enq.add_argument("--uid", required=True, help="Unique id for this unit")
+    p_enq.add_argument("--repo", required=True, help="Repo the unit belongs to")
+    p_enq.add_argument("--component", required=True, help="Leasable component (path or name)")
+    p_enq.add_argument("--task", required=True, help="What the ephemeral session must do")
+    p_enq.add_argument("--issue", type=int, default=None, help="Related issue number")
+    p_enq.add_argument("--lane", default="build", choices=("build", "flagship", "fast"))
+    p_enq.add_argument("--provider", default="", help="Pin a provider (claude|grok)")
+    p_enq.add_argument("--validate", default="bash scripts/local-ci.sh", help="Gate command")
+    p_enq.add_argument("--ttl", type=int, default=3600, help="Lease TTL seconds")
+    p_enq.set_defaults(func=_cmd_enqueue)
+
+    p_status = sub.add_parser("status", help="Supervisor board + coop peek (never drains)")
+    p_status.add_argument("--units", default="", metavar="FILE", help="Backlog JSON file")
+    p_status.add_argument("--handoff-dir", default=".coop/handoff", metavar="DIR")
+    p_status.add_argument("--agent", default="", help="Override AGENT_COOP_AGENT")
+    p_status.add_argument("--coop-home", default="", help="Override AGENT_COOP_HOME")
+    p_status.add_argument("--no-coop", action="store_true", help="Local board only")
+    p_status.add_argument("--json", action="store_true", help="Machine-readable board")
+    p_status.set_defaults(func=_cmd_status)
 
     return parser
 
