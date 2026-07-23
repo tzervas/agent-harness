@@ -62,6 +62,18 @@ GROK = Provider(
 
 REGISTRY: dict[str, Provider] = {p.name: p for p in (CLAUDE, GROK)}
 
+#: Provider preference per stage, most-preferred first.
+#:
+#: Implementation prefers **grok** by operator policy: it is the cheaper tier for
+#: mechanical execution, and the plan it executes was already produced by the
+#: deeper tier. Planning and verification prefer claude, because a bad plan and a
+#: dishonest verification are the two failures that cost the most downstream.
+ROLE_PREFERENCE: dict[str, tuple[str, ...]] = {
+    "plan": ("claude", "grok"),
+    "implement": ("grok", "claude"),
+    "verify": ("claude", "grok"),
+}
+
 
 @dataclass
 class Budget:
@@ -90,6 +102,7 @@ def route(
     *,
     lane: str,
     pinned: str | None = None,
+    role: str = "implement",
     registry: Mapping[str, Provider] | None = None,
     budgets: Mapping[str, Budget] | None = None,
     available: Sequence[str] | None = None,
@@ -134,11 +147,15 @@ def route(
         )
         raise NoProviderAvailable(msg)
 
-    # Highest weight wins; ties break on the most budget headroom, then name.
-    def sort_key(p: Provider) -> tuple[int, float, str]:
+    # Stage preference wins first (grok implements, claude plans and verifies),
+    # then weight, then budget headroom, then name for determinism.
+    preference = ROLE_PREFERENCE.get(role, ())
+
+    def sort_key(p: Provider) -> tuple[int, int, float, str]:
+        rank = preference.index(p.name) if p.name in preference else len(preference)
         remaining = budgets.get(p.name, Budget()).remaining
         # inf sorts fine as a float; negate for descending order.
-        return (-p.weight, -remaining, p.name)
+        return (rank, -p.weight, -remaining, p.name)
 
     return sorted(candidates, key=sort_key)[0]
 

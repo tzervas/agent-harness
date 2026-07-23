@@ -65,6 +65,30 @@ how two agents end up writing the same file.
 `--failure-budget` consecutive failures on one unit (default 3) stops respawning and
 posts a `block` message naming the unit. Silence is not a result.
 
+## Stages: plan → implement → verify
+
+Every unit runs through stages, **one ephemeral session per stage**, chained through
+the same handoff file. Planning is part of the loop rather than an assumption: an
+unplanned implementation session is the one most likely to burn its whole context
+rediscovering the problem.
+
+| Stage | Provider preferred | Must not |
+|-------|-------------------|----------|
+| `plan` | claude | modify any code; it writes the plan to the handoff |
+| `implement` | **grok** | ignore the plan without recording why |
+| `verify` | claude | fix what it finds — it reports, it does not patch |
+
+A failed stage aborts the remaining stages for that unit: implementing an unplanned
+unit, or verifying an unimplemented one, is wasted spend.
+
+`stages` is per-unit, so `"stages": ["implement"]` still works for trivial units.
+
+**Why grok implements.** It is the cheaper tier for mechanical execution, and the
+plan it executes was already produced by the deeper tier. Planning and verification
+prefer claude because a bad plan and a dishonest verification are the two failures
+that cost the most downstream. Preference is not a requirement — if the preferred
+provider is absent or out of budget, the other one takes the stage.
+
 ## Provider routing
 
 Both CLIs expose a single-shot headless mode, which is what makes an ephemeral

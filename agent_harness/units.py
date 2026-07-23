@@ -17,6 +17,11 @@ from typing import Any
 #: Cost lanes, mirroring modules/agents/model-policy.md (L0-rare / L1-default).
 LANES = ("build", "flagship", "fast")
 
+#: Stages every unit runs through, in order. Planning is part of the loop rather
+#: than an assumption: an unplanned implementation session is the one most likely
+#: to burn its context rediscovering the problem.
+STAGES = ("plan", "implement", "verify")
+
 
 @dataclass(frozen=True)
 class WorkUnit:
@@ -32,8 +37,17 @@ class WorkUnit:
     validate: str = "bash scripts/local-ci.sh"
     cwd: str | None = None
     ttl: int = 3600
+    stages: tuple[str, ...] = STAGES
 
     def __post_init__(self) -> None:
+        object.__setattr__(self, "stages", tuple(self.stages))
+        unknown = [s for s in self.stages if s not in STAGES]
+        if unknown:
+            msg = f"unit {self.uid!r}: unknown stage(s) {unknown}; expected {STAGES}"
+            raise ValueError(msg)
+        if not self.stages:
+            msg = f"unit {self.uid!r}: needs at least one stage"
+            raise ValueError(msg)
         if not self.uid:
             msg = "uid must be non-empty"
             raise ValueError(msg)
@@ -119,6 +133,7 @@ def unit_from_dict(payload: dict[str, Any]) -> WorkUnit:
         "validate",
         "cwd",
         "ttl",
+        "stages",
     }
     return WorkUnit(**{k: v for k, v in payload.items() if k in known})
 

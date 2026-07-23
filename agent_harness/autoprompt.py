@@ -25,6 +25,37 @@ def handoff_path_for(unit: WorkUnit, handoff_dir: str | Path) -> Path:
     return Path(handoff_dir) / f"{unit.uid}.md"
 
 
+#: What each stage is for, and what it must not do.
+STAGE_MISSION: dict[str, str] = {
+    "plan": (
+        "## Your stage: PLAN\n\n"
+        "Produce a plan. **Do not modify, create, or delete any code.** Read enough\n"
+        "of the repo to be concrete, then write the plan into the handoff file:\n\n"
+        "- the exact files you would change, and what changes\n"
+        "- the order of operations, and what each step is verified by\n"
+        "- the risks, and what would falsify your approach\n"
+        "- anything you discovered that makes the stated task wrong or incomplete\n\n"
+        "A plan that says 'investigate further' is not a plan. If the task cannot be\n"
+        "planned as stated, say exactly why and stop — that is a useful result."
+    ),
+    "implement": (
+        "## Your stage: IMPLEMENT\n\n"
+        "**Read the handoff file first — it contains the plan.** Execute it. Deviate\n"
+        "from the plan only where it is actually wrong, and record any deviation and\n"
+        "its reason in the handoff.\n\n"
+        "Make the change, run the gate, and only then claim success."
+    ),
+    "verify": (
+        "## Your stage: VERIFY\n\n"
+        "Independently check the work of the previous stage. **Do not fix what you\n"
+        "find** — report it. Run the gate yourself rather than trusting the handoff.\n\n"
+        "Confirm the change does what the task asked, that the gate genuinely passes,\n"
+        "and that nothing outside the leased component was touched. A verification\n"
+        "that rubber-stamps a broken change is worse than no verification at all."
+    ),
+}
+
+
 def build_autoprompt(
     unit: WorkUnit,
     *,
@@ -33,6 +64,7 @@ def build_autoprompt(
     coop_home: str = "",
     attempt: int = 1,
     prior_error: str = "",
+    stage: str = "implement",
 ) -> str:
     """Render the full instruction set for one ephemeral session."""
     handoff = handoff_path_for(unit, handoff_dir)
@@ -48,6 +80,18 @@ def build_autoprompt(
             "Read the handoff file before doing anything else, and do not blindly\n"
             "repeat the previous approach. If the unit is genuinely blocked, say so\n"
             "and stop — an honest block beats a third identical failure.\n"
+        )
+
+    if stage == "plan":
+        done_block = (
+            "The plan is written to the handoff file and is concrete enough that the\n"
+            "next session can execute it without rediscovering the problem. Do not run\n"
+            "the validation gate — you changed nothing."
+        )
+    else:
+        done_block = (
+            "Run the validation gate and let it pass before you claim success:\n\n"
+            f"    {unit.validate}"
         )
 
     env_block = ""
@@ -76,6 +120,8 @@ will not be asked a follow-up question. Nothing will wake you again.
 ## Task
 
 {unit.task.strip()}
+
+{STAGE_MISSION.get(stage, STAGE_MISSION["implement"])}
 {retry_block}
 ## Coordination discipline (non-negotiable)
 
@@ -91,9 +137,7 @@ has a TTL. Within that scope you may write freely. Outside it you may not.
 {env_block}
 ## Definition of done
 
-Run the validation gate and let it pass before you claim success:
-
-    {unit.validate}
+{done_block}
 
 Report honestly. A failing gate reported as failing is a useful result. A failing
 gate reported as passing poisons every downstream decision.

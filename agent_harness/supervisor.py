@@ -107,6 +107,7 @@ class Supervisor:
             provider = route(
                 lane=unit.lane,
                 pinned=unit.provider,
+                role=unit.stages[0],
                 registry=self.registry,
                 budgets=self.budgets,
                 available=self.available,
@@ -148,22 +149,52 @@ class Supervisor:
             )
 
         try:
-            result = self._spawn(unit, provider, attempt=attempt, prior_error=state.last_error)
-            self.budgets.setdefault(provider.name, Budget()).spend()
-            self._ensure_handoff(unit, provider, attempt, handoff)
+            result = None
+            used: list[str] = []
+            for stage in unit.stages:
+                try:
+                    stage_provider = route(
+                        lane=unit.lane,
+                        pinned=unit.provider,
+                        role=stage,
+                        registry=self.registry,
+                        budgets=self.budgets,
+                        available=self.available,
+                    )
+                except NoProviderAvailable:
+                    stage_provider = provider
+                provider = stage_provider
+                used.append(f"{stage}:{stage_provider.name}")
+                result = self._spawn(
+                    unit,
+                    stage_provider,
+                    attempt=attempt,
+                    prior_error=state.last_error,
+                    stage=stage,
+                )
+                self.budgets.setdefault(stage_provider.name, Budget()).spend()
+                self._ensure_handoff(unit, stage_provider, attempt, handoff)
+                if not result.ok:
+                    # A failed stage aborts the rest: implementing an unplanned
+                    # unit, or verifying an unimplemented one, is wasted spend.
+                    break
 
-            if result.ok:
+            pipeline = " -> ".join(used)
+            if result is not None and result.ok:
                 state.record_success(provider.name)
-                self._post_result(unit, provider, handoff, ok=True, detail="")
+                self._post_result(unit, provider, handoff, ok=True, detail=pipeline)
                 return SessionOutcome(
                     unit.uid,
                     OK,
                     provider=provider.name,
                     returncode=result.returncode,
+                    detail=pipeline,
                     handoff=str(handoff),
                 )
 
+            assert result is not None  # unit.stages is non-empty by construction
             error = (result.stderr or result.stdout or "").strip()[:200]
+            error = f"[{pipeline}] {error}" if error else f"[{pipeline}] exit {result.returncode}"
             state.record_failure(provider.name, error or f"exit {result.returncode}")
             if state.failures >= self.failure_budget:
                 state.escalated = True
@@ -199,6 +230,7 @@ class Supervisor:
         *,
         attempt: int,
         prior_error: str,
+        stage: str = "implement",
     ) -> RunResult:
         prompt = build_autoprompt(
             unit,
@@ -207,6 +239,7 @@ class Supervisor:
             coop_home=self.coop_home,
             attempt=attempt,
             prior_error=prior_error,
+            stage=stage,
         )
         return self.runner(
             provider.build_argv(prompt),

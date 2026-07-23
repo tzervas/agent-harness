@@ -197,8 +197,19 @@ def test_held_by_others_excludes_self() -> None:
 # -- providers -----------------------------------------------------------------
 
 
-def test_route_prefers_higher_weight() -> None:
-    assert route(lane="build", available=["claude", "grok"]).name == "claude"
+def test_route_prefers_grok_for_implementation() -> None:
+    # Operator policy: grok implements, claude plans and verifies.
+    assert route(lane="build", role="implement", available=["claude", "grok"]).name == "grok"
+
+
+def test_route_prefers_claude_for_plan_and_verify() -> None:
+    assert route(lane="build", role="plan", available=["claude", "grok"]).name == "claude"
+    assert route(lane="build", role="verify", available=["claude", "grok"]).name == "claude"
+
+
+def test_stage_preference_yields_to_availability() -> None:
+    # Preference is not a requirement: if grok is absent, claude still implements.
+    assert route(lane="build", role="implement", available=["claude"]).name == "claude"
 
 
 def test_route_falls_back_when_claude_absent() -> None:
@@ -496,3 +507,57 @@ def test_status_board_json(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -
 def test_status_board_empty_backlog(capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["status", "--no-coop"]) == 0
     assert "backlog empty" in capsys.readouterr().out
+
+
+# -- staged pipeline -----------------------------------------------------------
+
+
+def test_unit_runs_plan_implement_verify_in_order(tmp_path: Path) -> None:
+    runner = FakeRunner()
+    sup = make_supervisor(runner, tmp_path)
+    outcomes = sup.run_once()
+    assert outcomes[0].status == OK
+    # One ephemeral session per stage, in order, with the policy providers.
+    assert outcomes[0].detail == "plan:claude -> implement:grok -> verify:claude"
+    assert len(runner.argv_for("--output-format")) == 3
+
+
+def test_stage_prompts_differ_and_plan_forbids_edits(tmp_path: Path) -> None:
+    runner = FakeRunner()
+    sup = make_supervisor(runner, tmp_path)
+    sup.run_once()
+    prompts = [c[2] for c in runner.argv_for("--output-format")]
+    assert "Your stage: PLAN" in prompts[0]
+    assert "Do not modify, create, or delete any code" in prompts[0]
+    assert "Your stage: IMPLEMENT" in prompts[1]
+    assert "Your stage: VERIFY" in prompts[2]
+
+
+def test_plan_stage_does_not_ask_for_the_gate(tmp_path: Path) -> None:
+    runner = FakeRunner()
+    sup = make_supervisor(runner, tmp_path)
+    sup.run_once()
+    plan_prompt = runner.argv_for("--output-format")[0][2]
+    assert "you changed nothing" in plan_prompt
+
+
+def test_failed_plan_aborts_remaining_stages(tmp_path: Path) -> None:
+    runner = FakeRunner({"Your stage: PLAN": RunResult(1, "", "cannot plan")})
+    sup = make_supervisor(runner, tmp_path)
+    outcomes = sup.run_once()
+    assert outcomes[0].status == FAILED
+    # Implementing an unplanned unit is wasted spend.
+    assert len(runner.argv_for("--output-format")) == 1
+
+
+def test_single_stage_unit_is_honoured(tmp_path: Path) -> None:
+    runner = FakeRunner()
+    sup = make_supervisor(runner, tmp_path, units=[make_unit(stages=("implement",))])
+    outcomes = sup.run_once()
+    assert outcomes[0].detail == "implement:grok"
+    assert len(runner.argv_for("--output-format")) == 1
+
+
+def test_unknown_stage_rejected() -> None:
+    with pytest.raises(ValueError, match="unknown stage"):
+        make_unit(stages=("ponder",))
