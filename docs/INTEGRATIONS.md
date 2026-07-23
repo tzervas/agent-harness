@@ -72,6 +72,15 @@ uv run --project ../tz-forge tz-new agent-swarm /tmp/my-swarm --assistant=fracta
 ## cabal-devmelopner
 
 **Boundary.** Cabal is the operator-facing agent CLI/TUI for L0/L1 waves.
+**Role split for joint 1.0 work:** **agent-harness orchestrates** (spawn plans,
+join contracts, offline gates); **cabal-devmelopner is the leaf coding agent**
+(implementer CLI/TUI). Do not invert that boundary.
+
+**Joint execution plan (cabal 1.0):** see cabal’s
+[`docs/V1_0_0_JOINT_EXECUTION.md`](https://github.com/tzervas/cabal-devmelopner/blob/dev/docs/V1_0_0_JOINT_EXECUTION.md)
+(until on `dev`/`main`, use [PR #28](https://github.com/tzervas/cabal-devmelopner/pull/28)
+/`feat/v1-gap-analysis`). Lane ownership, file exclusivity, and Grok/Claude
+hand-offs live there — harness only points; cabal owns the plan content.
 
 **Honesty note.** `cabal-devmelopner` is itself pre-1.0 and has no released,
 versioned interface yet. The "cabal may drive harness dry-runs" pointer above
@@ -90,6 +99,7 @@ cuts a stable release and an integration test lands here.
 
 - Embedding cabal’s TUI or model-routing stack in this repo
 - Requiring cabal (or API keys) for `scripts/local-ci.sh` or unit tests
+- Owning cabal’s v1 gap/joint-execution docs (compose pointer only)
 
 **Example**
 

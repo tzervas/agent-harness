@@ -83,7 +83,11 @@ Zero runtime dependencies (stdlib `argparse` only). Dry-run spawn never hits the
 | [tzervas/tz-forge](https://github.com/tzervas/tz-forge) | Templates, fleet pack, `tz-new`, agent profiles |
 | [tzervas/tg-agent-relay](https://github.com/tzervas/tg-agent-relay) | Telegram bridge, providers, MCP facade (consume, don’t fork product) |
 | [tzervas/agent-mcp](https://github.com/tzervas/agent-mcp) | Multi-agent orchestration MCP (evaluate / integrate) |
-| [tzervas/cabal-devmelopner](https://github.com/tzervas/cabal-devmelopner) | Operator CLI/TUI for L0/L1 waves |
+| [tzervas/cabal-devmelopner](https://github.com/tzervas/cabal-devmelopner) | Leaf coding agent (CLI/TUI); harness orchestrates, cabal implements |
+
+**Joint 1.0 work with cabal:** harness = orchestrator; cabal = leaf coding agent.
+Plan: cabal [`docs/V1_0_0_JOINT_EXECUTION.md`](https://github.com/tzervas/cabal-devmelopner/blob/dev/docs/V1_0_0_JOINT_EXECUTION.md)
+([PR #28](https://github.com/tzervas/cabal-devmelopner/pull/28) until on `dev`).
 
 Full details: [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md).
 
